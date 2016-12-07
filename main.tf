@@ -62,6 +62,10 @@ resource "google_compute_firewall" "default" {
   network = "${google_compute_network.default.name}"
 
   allow {
+    protocol = "icmp"
+  }
+
+  allow {
     protocol = "tcp"
     ports = [22, 80, 443]
   }
