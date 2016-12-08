@@ -46,6 +46,7 @@ resource "google_compute_instance" "navium" {
       "echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list",
       "apt-get update",
       "apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni",
+      "if [ ${count.index} -eq 0 ]; then kubeadm init; fi",
     ]
   }
 }
