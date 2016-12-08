@@ -46,7 +46,15 @@ resource "google_compute_instance" "navium" {
       "echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list",
       "apt-get update",
       "apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni",
-      "if [ ${count.index} -eq 0 ]; then kubeadm init; fi",
+      <<EOF
+if [ ${count.index} -eq 0 ]
+then
+  kubeadm init --pod-network-cidr=10.244.0.0/16 &&
+  curl -sSL https://raw.github.com/coreos/flannel/master/Documentation/kube-flannel.yml |
+  kubectl apply -f -
+  kubectl get pods --all-namespaces
+fi
+EOF
     ]
   }
 }
