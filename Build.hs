@@ -42,6 +42,10 @@ main = shakeArgs shakeOptions $ do
   "clobber" ~> do
     removeFileIfExists tokenFile
 
+  "apply" ~> do
+    token <- kubeadmToken
+    cmd $ "terraform apply -var token='\"" ++ token ++ "\"'"
+
 
 removeFileIfExists :: String -> Action ()
 removeFileIfExists filename =

@@ -6,6 +6,10 @@ variable "num_instances" {
   default = 2
 }
 
+variable "token" {
+  default = ""
+}
+
 provider "google" {
   project     = "${var.project}"
   region      = "us-central1"
@@ -49,7 +53,7 @@ resource "google_compute_instance" "navium" {
       <<EOF
 if [ ${count.index} -eq 0 ]
 then
-  kubeadm init --pod-network-cidr=10.244.0.0/16 &&
+  kubeadm init --pod-network-cidr=10.244.0.0/16 --token '${var.token}' &&
   curl -sSL https://raw.github.com/coreos/flannel/master/Documentation/kube-flannel.yml |
   kubectl apply -f -
   kubectl get pods --all-namespaces
