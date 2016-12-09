@@ -1,6 +1,7 @@
 #!/usr/bin/env runhaskell
 
 import Control.Monad
+import Control.Monad.IO.Class
 import Development.Shake
 import Development.Shake.Command
 import Development.Shake.FilePath
@@ -11,22 +12,22 @@ import System.Random
 
 
 
-kubeadmTokenFile :: IO String
-kubeadmTokenFile = do
+kubeadmTokenFile :: MonadIO m => m String
+kubeadmTokenFile = liftIO $ do
   h <- getHomeDirectory
   return $ joinPath [h, ".google/kubeadm_token"]
 
 
 kubeadmToken :: Action String
 kubeadmToken = do
-  tokenFile <- liftIO kubeadmTokenFile
+  tokenFile <- kubeadmTokenFile
   need [tokenFile]
   liftIO $ readFile tokenFile
 
 
 main :: IO ()
 main = shakeArgs shakeOptions $ do
-  tokenFile <- liftIO kubeadmTokenFile
+  tokenFile <- kubeadmTokenFile
 
   want [tokenFile]
 
@@ -43,6 +44,5 @@ main = shakeArgs shakeOptions $ do
 
 
 removeFileIfExists :: String -> Action ()
-removeFileIfExists filename = liftIO $ do
-  e <- D.doesFileExist filename
-  when e $ removeFile filename
+removeFileIfExists filename =
+  liftIO $ flip when (removeFile filename) =<< D.doesFileExist filename
