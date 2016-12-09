@@ -1,5 +1,7 @@
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.ByteString.Base64
+import qualified Data.ByteString.Char8 as C
 import Development.Shake
 import Development.Shake.Command
 import Development.Shake.FilePath
@@ -23,17 +25,23 @@ kubeadmToken = do
   liftIO $ readFile tokenFile
 
 
+base64 :: String -> String
+base64 = C.unpack . encode . C.pack
+
+
+randomString :: RandomGen g => g -> Int -> String
+randomString g n = take n $ base64 $ take (n * 2) (randoms g :: String)
+
+
 main :: IO ()
 main = shakeArgs shakeOptions $ do
   tokenFile <- kubeadmTokenFile
 
-  want [tokenFile]
-
   tokenFile %> \out -> do
-    token <- liftIO $ do
-      g <- newStdGen
-      let (pre, post) = splitAt 6 $ take 16 $ randomRs ('!','~') g
-      return $ pre ++ "." ++ post
+    token <- do
+      g <- liftIO newStdGen
+      let str = randomString g
+      return $ str 6 ++ "." ++ str 16
     unit $ writeFile' out token
     unit $ cmd "chmod 400" out
 
@@ -41,9 +49,10 @@ main = shakeArgs shakeOptions $ do
     need ["destroy"]
     removeFileIfExists tokenFile
 
-  "apply" ~> do
-    token <- kubeadmToken
-    cmd $ "terraform apply -var token='\"" ++ token ++ "\"'"
+  forM_ ["apply", "plan"] $ \target -> do
+    target ~> do
+      token <- kubeadmToken
+      cmd $ "terraform " ++ target ++ " -var token='\"" ++ token ++ "\"'"
 
   "destroy" ~> cmd Shell "echo yes | terraform destroy"
   "show" ~> cmd "terraform show"
