@@ -1,5 +1,3 @@
-#!/usr/bin/env runhaskell
-
 import Control.Monad
 import Control.Monad.IO.Class
 import Development.Shake
