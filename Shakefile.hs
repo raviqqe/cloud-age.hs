@@ -47,6 +47,7 @@ main = shakeArgs shakeOptions $ do
     cmd $ "terraform apply -var token='\"" ++ token ++ "\"'"
 
   "destroy" ~> cmd Shell "echo yes | terraform destroy"
+  "show" ~> cmd "terraform show"
 
 
 removeFileIfExists :: String -> Action ()
