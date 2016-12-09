@@ -46,6 +46,8 @@ main = shakeArgs shakeOptions $ do
     token <- kubeadmToken
     cmd $ "terraform apply -var token='\"" ++ token ++ "\"'"
 
+  "destroy" ~> cmd Shell "echo yes | terraform destroy"
+
 
 removeFileIfExists :: String -> Action ()
 removeFileIfExists filename =

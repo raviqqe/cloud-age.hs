@@ -10,6 +10,10 @@ variable "token" {
   default = ""
 }
 
+variable "first_ip" {
+  default = 2
+}
+
 provider "google" {
   project     = "${var.project}"
   region      = "us-central1"
@@ -29,7 +33,7 @@ resource "google_compute_instance" "navium" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.default.name}"
-    address    = "10.0.0.${count.index + 2}"
+    address    = "10.0.0.${var.first_ip + count.index}"
     access_config {}
   }
 
@@ -37,28 +41,24 @@ resource "google_compute_instance" "navium" {
     ssh-keys = "root:${file("~/.ssh/id_rsa.pub")}"
   }
 
+  provisioner "file" {
+    connection {
+      private_key = "${file("~/.ssh/id_rsa")}"
+      agent       = "false"
+    }
+
+    source = "init_node.sh"
+    destination = "/tmp/init_node.sh"
+  }
+
   provisioner "remote-exec" {
     connection {
-      type        = "ssh"
-      user        = "root"
       private_key = "${file("~/.ssh/id_rsa")}"
       agent       = "false"
     }
 
     inline = [
-      "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -",
-      "echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list",
-      "apt-get update",
-      "apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni",
-      <<EOF
-if [ ${count.index} -eq 0 ]
-then
-  kubeadm init --pod-network-cidr=10.244.0.0/16 --token '${var.token}' &&
-  curl -sSL https://raw.github.com/coreos/flannel/master/Documentation/kube-flannel.yml |
-  kubectl apply -f -
-  kubectl get pods --all-namespaces
-fi
-EOF
+      "sh /tmp/init_node.sh 10.0.0.${var.first_ip} '${var.token}' ${self.network_interface.0.address}",
     ]
   }
 }
@@ -83,6 +83,11 @@ resource "google_compute_firewall" "default" {
 
   allow {
     protocol = "tcp"
-    ports = [22, 80, 443]
+    ports = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports = ["0-65535"]
   }
 }
