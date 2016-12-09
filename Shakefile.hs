@@ -40,6 +40,7 @@ main = shakeArgs shakeOptions $ do
     unit $ cmd "chmod 400" out
 
   "clobber" ~> do
+    need ["destroy"]
     removeFileIfExists tokenFile
 
   "apply" ~> do
