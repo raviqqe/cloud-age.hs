@@ -10,8 +10,8 @@ variable "token" {
   default = ""
 }
 
-variable "first_ip" {
-  default = 2
+data "template_file" "first_ip" {
+  template = "${element(split(".", google_compute_subnetwork.default.gateway_address), 3) + 1}"
 }
 
 provider "google" {
@@ -33,7 +33,7 @@ resource "google_compute_instance" "navium" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.default.name}"
-    address    = "10.0.0.${var.first_ip + count.index}"
+    address    = "10.0.0.${data.template_file.first_ip.rendered + count.index}"
     access_config {}
   }
 
@@ -58,7 +58,7 @@ resource "google_compute_instance" "navium" {
     }
 
     inline = [
-      "sh /tmp/init_node.sh 10.0.0.${var.first_ip} '${var.token}' ${self.network_interface.0.address}",
+      "sh /tmp/init_node.sh 10.0.0.${data.template_file.first_ip.rendered} '${var.token}' ${self.network_interface.0.address}",
     ]
   }
 }
