@@ -12,6 +12,9 @@ import System.Random
 
 
 
+adminFile = "etc/admin.conf"
+
+
 kubeadmTokenFile :: MonadIO m => m String
 kubeadmTokenFile = liftIO $ do
   h <- getHomeDirectory
@@ -54,7 +57,12 @@ main = shakeArgs shakeOptions $ do
       token <- kubeadmToken
       cmd $ "terraform " ++ target ++ " -var token='\"" ++ token ++ "\"'"
 
-  "destroy" ~> cmd Shell "echo yes | terraform destroy"
+  adminFile %> \out -> do
+    need ["apply"]
+
+  "destroy" ~> do
+    removeFileIfExists adminFile
+    cmd Shell "echo yes | terraform destroy"
   "show" ~> cmd "terraform show"
 
 

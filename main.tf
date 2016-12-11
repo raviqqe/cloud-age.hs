@@ -14,6 +14,10 @@ data "template_file" "first_ip" {
   template = "${element(split(".", google_compute_subnetwork.default.gateway_address), 3) + 1}"
 }
 
+data "template_file" "master_ip" {
+  template = "10.0.0.${data.template_file.first_ip.rendered}"
+}
+
 provider "google" {
   project     = "${var.project}"
   region      = "us-central1"
@@ -58,8 +62,12 @@ resource "google_compute_instance" "navium" {
     }
 
     inline = [
-      "sh /tmp/init_node.sh 10.0.0.${data.template_file.first_ip.rendered} '${var.token}' ${self.network_interface.0.address}",
+      "sh /tmp/init_node.sh ${data.template_file.master_ip.rendered} '${var.token}' ${self.network_interface.0.address}",
     ]
+  }
+
+  provisioner "local-exec" {
+    command = "sh fetch_admin_conf.sh ${google_compute_instance.navium.0.network_interface.0.access_config.0.assigned_nat_ip} ${data.template_file.master_ip.rendered} ${self.network_interface.0.address}",
   }
 }
 
