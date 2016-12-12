@@ -65,7 +65,7 @@ main = shakeArgs shakeOptions $ do
 
   "destroy" ~> do
     removeFileIfExists adminFile
-    cmd Shell "echo yes | terraform destroy"
+    cmd "terraform destroy -force"
   "show" ~> cmd "terraform show"
 
   "proxy" ~> do
