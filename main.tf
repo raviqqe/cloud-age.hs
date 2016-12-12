@@ -84,6 +84,7 @@ resource "google_compute_subnetwork" "default" {
 resource "google_compute_firewall" "default" {
   name = "fireball"
   network = "${google_compute_network.default.name}"
+  source_ranges = ["0.0.0.0/0"]
 
   allow {
     protocol = "icmp"
