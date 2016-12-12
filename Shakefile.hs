@@ -32,8 +32,10 @@ base64 :: String -> String
 base64 = C.unpack . encode . C.pack
 
 
-randomString :: RandomGen g => g -> Int -> String
-randomString g n = take n $ base64 $ take (n * 2) (randoms g :: String)
+randomString :: Int -> IO String
+randomString n = do
+  g <- newStdGen
+  return $ take n $ base64 $ take (n * 2) (randoms g :: String)
 
 
 main :: IO ()
@@ -42,9 +44,9 @@ main = shakeArgs shakeOptions $ do
 
   tokenFile %> \out -> do
     token <- do
-      g <- liftIO newStdGen
-      let str = randomString g
-      return $ str 6 ++ "." ++ str 16
+      pre <- liftIO $ randomString 6
+      post <- liftIO $ randomString 16
+      return $ pre ++ "." ++ post
     unit $ writeFile' out token
     unit $ cmd "chmod 400" out
 
