@@ -62,7 +62,7 @@ resource "google_compute_instance" "navium" {
     }
 
     inline = [
-      "sh /tmp/init_node.sh ${data.template_file.master_ip.rendered} '${var.token}' ${self.network_interface.0.address}",
+      "sh /tmp/init_node.sh ${google_compute_instance.navium.0.network_interface.0.access_config.0.assigned_nat_ip} ${data.template_file.master_ip.rendered} '${var.token}' ${self.network_interface.0.address}",
     ]
   }
 

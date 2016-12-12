@@ -8,6 +8,7 @@ import Development.Shake.FilePath
 import Development.Shake.Util
 import System.Directory as D
 import System.FilePath.Posix
+import System.Process
 import System.Random
 
 
@@ -66,6 +67,10 @@ main = shakeArgs shakeOptions $ do
     removeFileIfExists adminFile
     cmd Shell "echo yes | terraform destroy"
   "show" ~> cmd "terraform show"
+
+  "proxy" ~> do
+    need [adminFile]
+    liftIO $ void $ system $ "sh -c \"kubectl --kubeconfig " ++ adminFile ++ " proxy --port 8080 &\""
 
 
 removeFileIfExists :: String -> Action ()
