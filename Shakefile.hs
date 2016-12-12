@@ -70,7 +70,8 @@ main = shakeArgs shakeOptions $ do
 
   "proxy" ~> do
     need [adminFile]
-    liftIO $ void $ system $ "sh -c \"kubectl --kubeconfig " ++ adminFile ++ " proxy --port 8080 &\""
+    liftIO $ void $ system $
+      "sh -c \"kubectl --kubeconfig " ++ adminFile ++ " proxy --port 8080 &\""
 
 
 removeFileIfExists :: String -> Action ()
